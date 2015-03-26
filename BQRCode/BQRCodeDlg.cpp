@@ -56,12 +56,17 @@ CBQRCodeDlg::CBQRCodeDlg(CWnd* pParent /*=NULL*/)
 void CBQRCodeDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialogEx::DoDataExchange(pDX);
+	DDX_Control(pDX, IDC_FILEPATH, m_filePath);
 }
 
 BEGIN_MESSAGE_MAP(CBQRCodeDlg, CDialogEx)
 	ON_WM_SYSCOMMAND()
 	ON_WM_PAINT()
 	ON_WM_QUERYDRAGICON()
+	ON_BN_CLICKED(IDCANCEL, &CBQRCodeDlg::OnBnClickedCancel)
+	ON_BN_CLICKED(IDC_SELECTFILE, &CBQRCodeDlg::OnBnClickedSelectfile)
+	ON_BN_CLICKED(IDC_GENERATE, &CBQRCodeDlg::OnBnClickedGenerate)
+	ON_BN_CLICKED(IDC_SAVE, &CBQRCodeDlg::OnBnClickedSave)
 END_MESSAGE_MAP()
 
 
@@ -148,5 +153,44 @@ void CBQRCodeDlg::OnPaint()
 HCURSOR CBQRCodeDlg::OnQueryDragIcon()
 {
 	return static_cast<HCURSOR>(m_hIcon);
+}
+
+
+/*选择文件按钮*/
+void CBQRCodeDlg::OnBnClickedSelectfile()
+{
+
+		// 过滤器
+	static TCHAR BASED_CODE szFilter[] = _T("位图(*.bmp)|*.bmp|图片(*.png)|*.png|");
+	CFileDialog dlgFile(TRUE,NULL,NULL, OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT,szFilter,NULL,0,TRUE);
+
+    if (dlgFile.DoModal())
+    {
+		picturePath = dlgFile.GetPathName();
+		m_filePath.SetWindowTextW(picturePath);
+    }
+	//MessageBox(_T("选择文件按钮"));
+	// TODO: 在此添加控件通知处理程序代码
+}
+
+
+void CBQRCodeDlg::OnBnClickedGenerate()
+{
+	// 生成二维码按钮
+	// TODO: 在此添加控件通知处理程序代码
+}
+
+
+void CBQRCodeDlg::OnBnClickedSave()
+{
+	// 保存二维码按钮
+	// TODO: 在此添加控件通知处理程序代码
+}
+
+
+void CBQRCodeDlg::OnBnClickedCancel()
+{
+	// TODO: 在此添加控件通知处理程序代码
+	CDialogEx::OnCancel();
 }
 
