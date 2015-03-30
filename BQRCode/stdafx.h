@@ -18,7 +18,8 @@
 
 #include <afxwin.h>         // MFC 核心组件和标准组件
 #include <afxext.h>         // MFC 扩展
-
+#include <stdlib.h>
+#include <stdio.h>
 
 #include <afxdisp.h>        // MFC 自动化类
 
@@ -52,3 +53,33 @@
 #endif
 
 
+/*里所码部分定义*/
+/* galois arithmetic tables */
+extern int gexp[];
+extern int glog[];
+#define NPAR 32
+
+/****************************************************************/
+
+
+
+#define TRUE 1
+#define FALSE 0
+
+typedef unsigned long BIT32;
+typedef unsigned short BIT16;
+
+/* **************************************************************** */
+
+/* Maximum degree of various polynomials. */
+#define MAXDEG (NPAR*2)
+
+/*************************************/
+/* Encoder parity bytes */
+extern int pBytes[MAXDEG];
+
+/* Decoder syndrome bytes */
+extern int synBytes[MAXDEG];
+
+/* print debugging info*/ 
+extern int DEBUG_RS;
