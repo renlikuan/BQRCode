@@ -6,6 +6,10 @@
 #include "BQRCode.h"
 #include "BQRCodeDlg.h"
 #include "afxdialogex.h"
+#include "RSCoder.h"
+#include "CvvImage.h"
+#include "Img2Code.h"
+#include "QRCodeProcess.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -19,13 +23,13 @@ class CAboutDlg : public CDialogEx
 public:
 	CAboutDlg();
 
-// 对话框数据
+	// 对话框数据
 	enum { IDD = IDD_ABOUTBOX };
 
-	protected:
+protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 支持
 
-// 实现
+	// 实现
 protected:
 	DECLARE_MESSAGE_MAP()
 };
@@ -57,6 +61,8 @@ void CBQRCodeDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialogEx::DoDataExchange(pDX);
 	DDX_Control(pDX, IDC_FILEPATH, m_filePath);
+	DDX_Control(pDX, IDC_SAVEPATH, m_savePath);
+	DDX_Control(pDX, IDC_PROGRESS, m_progress);
 }
 
 BEGIN_MESSAGE_MAP(CBQRCodeDlg, CDialogEx)
@@ -67,6 +73,7 @@ BEGIN_MESSAGE_MAP(CBQRCodeDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_SELECTFILE, &CBQRCodeDlg::OnBnClickedSelectfile)
 	ON_BN_CLICKED(IDC_GENERATE, &CBQRCodeDlg::OnBnClickedGenerate)
 	ON_BN_CLICKED(IDC_SAVE, &CBQRCodeDlg::OnBnClickedSave)
+	ON_BN_CLICKED(IDC_SELECTSAVE, &CBQRCodeDlg::OnBnClickedSelectsave)
 END_MESSAGE_MAP()
 
 
@@ -102,6 +109,8 @@ BOOL CBQRCodeDlg::OnInitDialog()
 	SetIcon(m_hIcon, FALSE);		// 设置小图标
 
 	// TODO: 在此添加额外的初始化代码
+	// 进度条
+	m_progress.SetRange(0,100);
 
 	return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
 }
@@ -160,15 +169,15 @@ HCURSOR CBQRCodeDlg::OnQueryDragIcon()
 void CBQRCodeDlg::OnBnClickedSelectfile()
 {
 
-		// 过滤器
+	// 过滤器
 	static TCHAR BASED_CODE szFilter[] = _T("位图(*.bmp)|*.bmp|图片(*.png)|*.png|");
 	CFileDialog dlgFile(TRUE,NULL,NULL, OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT,szFilter,NULL,0,TRUE);
 
-    if (dlgFile.DoModal())
-    {
+	if (dlgFile.DoModal())
+	{
 		picturePath = dlgFile.GetPathName();
-		m_filePath.SetWindowTextW(picturePath);
-    }
+		m_filePath.SetWindowTextA(picturePath);
+	}
 	//MessageBox(_T("选择文件按钮"));
 	// TODO: 在此添加控件通知处理程序代码
 }
@@ -178,14 +187,36 @@ void CBQRCodeDlg::OnBnClickedGenerate()
 {
 	// 生成二维码按钮
 	// TODO: 在此添加控件通知处理程序代码
-}
+	MessageBox(_T("生成个性化二维码"));
+	m_progress.SetPos(30);
+	
+	IplImage *iplImg = cvLoadImage(picturePath.GetBuffer(0),0);//读取为单通道图片，即灰度图
+	Mat input_image(iplImg,0);
+	
+	CImg2Code img2code;
 
+	img2code.Img2bit(input_image,imgBits);
+	
+	/*
+	ShowImage(input_image,IDC_QRCODE);
+
+	unsigned char msg[223];
+	unsigned char codeword[256];
+	for(int i=0;i<223;i++){
+		msg[i]=i;
+	}
+	initialize_ecc ();
+	encode_data(msg,223, codeword);
+	*/
+}
 
 void CBQRCodeDlg::OnBnClickedSave()
 {
 	// 保存二维码按钮
 	// TODO: 在此添加控件通知处理程序代码
+	MessageBox(_T("保存生成的二维码"));
 }
+
 
 
 void CBQRCodeDlg::OnBnClickedCancel()
@@ -194,3 +225,37 @@ void CBQRCodeDlg::OnBnClickedCancel()
 	CDialogEx::OnCancel();
 }
 
+void CBQRCodeDlg::OnBnClickedSelectsave()
+{
+	// TODO: 在此添加控件通知处理程序代码
+	static TCHAR BASED_CODE szFilter[] = _T("位图(*.bmp)|*.bmp|");
+	CFileDialog dlgFile(FALSE,NULL,_T("BQRCode"), OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT,szFilter,NULL,0,TRUE);
+
+	if (dlgFile.DoModal())
+	{
+		qrcodePath = dlgFile.GetPathName();
+		m_savePath.SetWindowTextA(qrcodePath);
+	}
+}
+void CBQRCodeDlg::ShowImage(Mat img,UINT ID){
+	/*显示图片到图片控件中*/
+	
+	if(img.empty()){
+		MessageBox("文件为空");
+		return;
+	}
+	IplImage iplImg = IplImage(img);
+	CDC *pDC=GetDlgItem(ID)->GetDC();
+	HDC hDC=pDC->GetSafeHdc();
+	CRect rect;
+	GetDlgItem(ID)->GetClientRect(&rect);
+	/*
+	CString debugInfo;
+	debugInfo.Format("%d  %d",rect.Width(),rect.Height());
+	MessageBox(debugInfo);
+	*/
+	CvvImage cvvImg;  
+    cvvImg.CopyOf(&iplImg);  
+    cvvImg.DrawToHDC(hDC,&rect);  
+    ReleaseDC(pDC);
+}
